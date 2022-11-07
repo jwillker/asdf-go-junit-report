@@ -2,7 +2,6 @@
 
 set -euo pipefail
 
-# TODO: Ensure this is the correct GitHub homepage where releases can be downloaded for go-junit-report.
 GH_REPO="https://github.com/jstemmer/go-junit-report"
 TOOL_NAME="go-junit-report"
 TOOL_TEST="go-junit-report --help"
@@ -40,11 +39,13 @@ download_release() {
   local version filename url
   version="$1"
   filename="$2"
+  platform="$(get_platform)"
+  arch="$(get_arch)"
 
-  # TODO: Adapt the release URL convention for go-junit-report
-  url="$GH_REPO/archive/v${version}.tar.gz"
+  url="$GH_REPO/releases/download/v${version}/go-junit-report-v${version}-${platform}-${arch}.tar.gz"
 
   echo "* Downloading $TOOL_NAME release $version..."
+  echo "* Download url: $url"
   curl "${curl_opts[@]}" -o "$filename" -C - "$url" || fail "Could not download $url"
 }
 
@@ -61,9 +62,9 @@ install_version() {
     mkdir -p "$install_path"
     cp -r "$ASDF_DOWNLOAD_PATH"/* "$install_path"
 
-    # TODO: Assert go-junit-report executable exists.
     local tool_cmd
     tool_cmd="$(echo "$TOOL_TEST" | cut -d' ' -f1)"
+    chmod +x "$install_path/$tool_cmd"
     test -x "$install_path/$tool_cmd" || fail "Expected $install_path/$tool_cmd to be executable."
 
     echo "$TOOL_NAME $version installation was successful!"
@@ -71,4 +72,22 @@ install_version() {
     rm -rf "$install_path"
     fail "An error occurred while installing $TOOL_NAME $version."
   )
+}
+
+get_platform() {
+  uname | tr '[:upper:]' '[:lower:]'
+}
+
+get_arch() {
+  local arch=""
+
+  case "$(uname -m)" in
+  x86_64 | amd64) arch="amd64" ;;
+  *)
+    echo "Arch '$(uname -m)' not supported!" >&2
+    exit 1
+    ;;
+  esac
+
+  echo -n $arch
 }

@@ -83,6 +83,7 @@ get_arch() {
 
   case "$(uname -m)" in
   x86_64 | amd64) arch="amd64" ;;
+  arm64) arch="arm64" ;;
   *)
     echo "Arch '$(uname -m)' not supported!" >&2
     exit 1
